@@ -6,3 +6,4 @@ def myFunction_v1():
 
 if __name__ == "__main__":
   myFunction_v1()
+  print(mysum(5, 10))

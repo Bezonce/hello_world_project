@@ -15,16 +15,16 @@ In this example repository I would like to practice git, gitHub, and virtual usa
 
 To set up the project locally, follow these steps:
 
-```shell
-# Clone the repository
+
+# in Git Bash Clone the repository
 git clone https://github.com/Bezonce/hello_world_project.git your-repo
 
-# Navigate to the project directory
+# In cmd Navigate to the project directory
 cd your-repo
 
 # Create and activate a virtual environment
 python -m venv venv
-source venv/bin/activate
+venv\Scripts\activate
 
 # Install project dependencies
 pip install -r requirements.txt

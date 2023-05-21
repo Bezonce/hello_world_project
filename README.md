@@ -1,30 +1,26 @@
-
-Steps to initialize the sandbox
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-
 # hello_world_project
-
-## My first test github repository.
-
 
 In this example repository I would like to practice git, gitHub, and virtual usage.
 
-## Getting Started
+<details>
+<summary>Getting Started</summary>
 
-To set up the project locally, follow these steps:
-
-
+To clone the gitHub repository in the Git Bast run:
+```shell
 # in Git Bash Clone the repository
 git clone https://github.com/Bezonce/hello_world_project.git your-repo
 
 # In cmd Navigate to the project directory
 cd your-repo
+```
 
+Steps to initialize the sandbox
+```shell
 # Create and activate a virtual environment
 python -m venv venv
 venv\Scripts\activate
 
 # Install project dependencies
 pip install -r requirements.txt
+```
+</details>

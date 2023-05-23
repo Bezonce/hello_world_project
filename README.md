@@ -24,3 +24,11 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 </details>
+
+<details>
+<summary>Getting Started with docker build</summary>
+```shell
+docker build -t hello_world_project_docker . -f DockerFile
+docker run -p 8080:80 hello_world_project_docker
+```
+</details>

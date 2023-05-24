@@ -27,8 +27,14 @@ pip install -r requirements.txt
 
 <details>
 <summary>Getting Started with docker build</summary>
+
 ```shell
-docker build -t hello_world_project_docker . -f DockerFile
-docker run -p 8080:80 hello_world_project_docker
+docker build -t streamlit-app .
+docker run -p 8501:8501 streamlit-app
 ```
+
+```shell
+docker-compose up -d
+```
+
 </details>

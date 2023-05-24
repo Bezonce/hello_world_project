@@ -1,22 +1,18 @@
 import numpy as np
-from fastapi import FastAPI, HTTPException, Response
-
-app = FastAPI()
-
-
-def my_sum(a, b):
-    return a + b
+#from fastapi import FastAPI, Response
+from dataclasses import dataclass, field
 
 
-def vec_diff_length(a, b):
-    return np.linalg.norm(a - b)
 
-
-@app.get("/")
-def read_root() -> Response:
-    return Response("The hello world project server is running.")
-
-
-@app.get("/calculate/")
-def run_calculation() -> Response:
-    return Response(str(vec_diff_length(np.array([1, 1]), np.array([2, 2]))))
+#app = FastAPI()
+#
+#@app.get("/")
+#def read_root() -> Response:
+#    return Response("The server is running.")
+#
+#
+#@app.get("/calc")
+#def read_root() -> Response:
+#    a = np.array([1, 1])
+#    b = np.array([2, 2])
+#    return Response(str(np.linalg.norm(a, b)))

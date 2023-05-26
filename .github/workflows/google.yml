@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: hello_world_project
+      PROJECT_ID: hellowolrdproject-387922
 
     steps:
       - name: Checkout code
@@ -18,12 +21,24 @@ jobs:
         with:
           python-version: 3.x
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.SERVICE_ACCOUNT_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+          export_default_credentials: true
 
-      - name: Deploy to Google Cloud
-        run: |
-          echo "$GOOGLE_CREDENTIALS" > google-credentials.json
-          gcloud auth activate-service-account --key-file=google-credentials.json
-          gcloud config set project hellowolrdproject-387922
-          gcloud app deploy
+      - name: Build Docker Image
+        run: docker build -t streamlit . -f DockerFile
+
+      - name: Configure Docker Client
+        run: |-
+          gcloud auth configure-docker --quiet
+
+      - name: Push Docker Image to Artifact Registry
+        env:
+          GIT_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+        run: |-
+          docker tag $IMAGE_NAME:latest us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:latest
+          docker tag $IMAGE_NAME:latest us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:$GIT_TAG
+          docker push us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:latest
+          docker push us-west2-docker.pkg.dev/$PROJECT_ID/images/$IMAGE_NAME:$GIT_TAG

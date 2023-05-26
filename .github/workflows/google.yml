@@ -3,7 +3,7 @@ name: Deploy to Google Cloud
 on:
   push:
     branches:
-      - main
+      - Dockerisation
 
 jobs:
   deploy:
@@ -27,4 +27,3 @@ jobs:
           gcloud auth activate-service-account --key-file=google-credentials.json
           gcloud config set project YOUR_PROJECT_ID
           gcloud app deploy
-      

@@ -25,5 +25,5 @@ jobs:
         run: |
           echo "$GOOGLE_CREDENTIALS" > google-credentials.json
           gcloud auth activate-service-account --key-file=google-credentials.json
-          gcloud config set project YOUR_PROJECT_ID
+          gcloud config set project hellowolrdproject-387922
           gcloud app deploy

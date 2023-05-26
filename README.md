@@ -26,15 +26,15 @@ pip install -r requirements.txt
 </details>
 
 <details>
-<summary>Getting Started with docker build</summary>
+<summary>Getting Started with docker/summary></summary>
 
+Build an image with docker.
 ```shell
 docker build -t streamlit-app .
 docker run -p 8501:8501 streamlit-app
 ```
-
+Use docker-compose to be able to use reload functions.
 ```shell
 docker-compose up -d
 ```
-
 </details>

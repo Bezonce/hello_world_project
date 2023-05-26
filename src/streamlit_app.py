@@ -1,37 +1,65 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
 import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+import time
 
-"""
-# Welcome to Streamlit!
+# Enable Streamlit session state
+if 'cursor_position' not in st.session_state:
+    st.session_state.cursor_position = 0
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
+# Display file uploader
+video_file = st.file_uploader("Upload a video file", type=["mp4", "webm", "ogg"])
 
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+# Check if a file was uploaded
+if video_file is not None:
+    # Get the file name and content
+    file_name = video_file.name
+    file_content = video_file.read()
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+    # Display the video with timecode
+    video_id = st.video(file_content, format='video/mp4', start_time=0)
 
-with st.echo(code_location='below'):
-   total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-   num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+    # Generate random signal
+    np.random.seed(0)
+    signal = np.random.randn(100)
 
-   Point = namedtuple('Point', 'x y')
-   data = []
+    # Create a time axis for the signal
+    time = np.arange(len(signal))
 
-   points_per_turn = total_points / num_turns
+    # Calculate cursor time based on video timecode
+    cursor_time = int((st.session_state.cursor_position / 100) * len(signal))
 
-   for curr_point_num in range(total_points):
-      curr_turn, i = divmod(curr_point_num, points_per_turn)
-      angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-      radius = curr_point_num / total_points
-      x = radius * math.cos(angle)
-      y = radius * math.sin(angle)
-      data.append(Point(x, y))
+    # Plot the signal with the cursor
+    fig, ax = plt.subplots()
+    ax.plot(time, signal)
+    ax.axvline(x=cursor_time, color='r', linestyle='--')
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Signal')
+    st.pyplot(fig, clear_figure=True)
 
-   st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-      .mark_circle(color='#0068c9', opacity=0.5)
-      .encode(x='x:Q', y='y:Q'))
+    # Create JavaScript callback function
+    js_code = """
+    var video = document.querySelector('video');
+    var cursor = document.querySelector('input[type="range"]');
+
+    function syncVideoCursor(event) {
+        const currentTime = (event.currentTarget.currentTime / event.currentTarget.duration) * 100;
+        cursor.value = currentTime.toFixed(2);
+        cursor.dispatchEvent(new Event('input'));
+    }
+
+    video.addEventListener('timeupdate', syncVideoCursor);
+    """
+
+    # Execute JavaScript code
+    st.script(js_code)
+
+    # Update video playback based on cursor position
+    cursor_position = st.slider("Cursor position", min_value=0, max_value=100, value=st.session_state.cursor_position, key='slider')
+    st.session_state.cursor_position = cursor_position
+
+    # Calculate cursor time based on video timecode
+    cursor_time = int((cursor_position / 100) * len(signal))
+
+    # Synchronize video playback with cursor
+    st.experimental_set_component_value(video_id, {'time': (cursor_time / len(signal)) * st.video.get_video_duration(video_id)})

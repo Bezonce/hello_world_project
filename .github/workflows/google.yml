@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: 3.x
 
-      - uses: google-github-actions/setup-gcloud@master
+      - uses: https://github.com/google-github-actions/setup-gcloud.git
         with:
           service_account_key: ${{ secrets.SERVICE_ACCOUNT_KEY }}
           project_id: ${{ env.PROJECT_ID }}

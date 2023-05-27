@@ -1,65 +1,103 @@
+from snowflake.snowpark.session import Session
+from snowflake.snowpark import functions as F
+from snowflake.snowpark.types import *
+from snowflake.snowpark import Window
+
+from io import StringIO
 import streamlit as st
+import pandas as pd
+import json
 import numpy as np
-import matplotlib.pyplot as plt
-import time
 
-# Enable Streamlit session state
-if 'cursor_position' not in st.session_state:
-    st.session_state.cursor_position = 0
+st.set_page_config(page_title='CSV Snowpark Uploader', initial_sidebar_state="auto", menu_items=None)
+ss = st.session_state
+session = ''
+# st.write(ss)
+if not ss:
+    ss.pressed_first_button = False
 
-# Display file uploader
-video_file = st.file_uploader("Upload a video file", type=["mp4", "webm", "ogg"])
+# @st.cache_data
+with st.sidebar:
+    SF_ACCOUNT = st.text_input('Snowflake Account ( ab12345.ca-central-1.aws ):')
+    SF_USR = st.text_input('Snowflake USER ( TYANG ):')
+    SF_PWD = st.text_input('Snowflake password:', type='password')
 
-# Check if a file was uploaded
-if video_file is not None:
-    # Get the file name and content
-    file_name = video_file.name
-    file_content = video_file.read()
+    conn = {'ACCOUNT': SF_ACCOUNT, 'USER': SF_USR, 'PASSWORD': SF_PWD}
 
-    # Display the video with timecode
-    video_id = st.video(file_content, format='video/mp4', start_time=0)
+    if st.button('Connect') or ss.pressed_first_button:
+        session = Session.builder.configs(conn).create()
+        ss.pressed_first_button = True
 
-    # Generate random signal
-    np.random.seed(0)
-    signal = np.random.randn(100)
+        if session != '':
+            datawarehouse_list = session.sql("show warehouses;").collect()
+            datawarehouse_list = pd.DataFrame(datawarehouse_list)
+            datawarehouse_list = datawarehouse_list["name"]
 
-    # Create a time axis for the signal
-    time = np.arange(len(signal))
+            datawarehouse_option = st.selectbox('Select Virtual datawarehouse', datawarehouse_list)
 
-    # Calculate cursor time based on video timecode
-    cursor_time = int((st.session_state.cursor_position / 100) * len(signal))
+            database_list_df = session.sql("show databases;").collect()
+            database_list_df = pd.DataFrame(database_list_df)
+            database_list_df = database_list_df["name"]
 
-    # Plot the signal with the cursor
-    fig, ax = plt.subplots()
-    ax.plot(time, signal)
-    ax.axvline(x=cursor_time, color='r', linestyle='--')
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Signal')
-    st.pyplot(fig, clear_figure=True)
+            database_option = st.selectbox('Select database', database_list_df)
+            set_database = session.sql(f'''USE DATABASE {database_option}   ;''').collect()
 
-    # Create JavaScript callback function
-    js_code = """
-    var video = document.querySelector('video');
-    var cursor = document.querySelector('input[type="range"]');
+            if set_database != '':
+                set_database = session.use_database(database_option)
+                schema_list_df = session.sql("show schemas;").collect()
+                schema_list_df = pd.DataFrame(schema_list_df)
+                schema_list_df = schema_list_df["name"]
 
-    function syncVideoCursor(event) {
-        const currentTime = (event.currentTarget.currentTime / event.currentTarget.duration) * 100;
-        cursor.value = currentTime.toFixed(2);
-        cursor.dispatchEvent(new Event('input'));
-    }
+                schema_option = st.selectbox('Select schema', schema_list_df)
+                set_schema = session.sql(f'''USE schema {schema_option}   ;''').collect()
 
-    video.addEventListener('timeupdate', syncVideoCursor);
-    """
+                if set_schema != '':
+                    table_list_df = session.sql("show tables;").collect()
+                    table_list_df = pd.DataFrame(table_list_df)
+                    if not table_list_df.empty:
+                        table_list_df = table_list_df["name"]
 
-    # Execute JavaScript code
-    st.script(js_code)
+                        table_option = st.selectbox('Select tables', table_list_df)
+                        upload_table = st.text_input('Use table:', table_option)
 
-    # Update video playback based on cursor position
-    cursor_position = st.slider("Cursor position", min_value=0, max_value=100, value=st.session_state.cursor_position, key='slider')
-    st.session_state.cursor_position = cursor_position
+                        conn2 = {
+                            'ACCOUNT': SF_ACCOUNT,
+                            'user': SF_USR,
+                            'password': SF_PWD,
+                            'schema': schema_option,
+                            'database': database_option,
+                            'warehouse': datawarehouse_option,
+                        }
 
-    # Calculate cursor time based on video timecode
-    cursor_time = int((cursor_position / 100) * len(signal))
+with st.container():
+    if session != '':
+        uploaded_file = st.file_uploader("Choose a file")
+        if uploaded_file is not None:
+            if uploaded_file.type == 'text/csv':
+                # bytes_data = uploaded_file.getvalue()
 
-    # Synchronize video playback with cursor
-    st.experimental_set_component_value(video_id, {'time': (cursor_time / len(signal)) * st.video.get_video_duration(video_id)})
+                # To convert to a string based IO:
+                stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+
+                # To read file as string:
+                string_data = stringio.read()
+
+                # Can be used wherever a "file-like" object is accepted:
+                df = pd.read_csv(uploaded_file)
+                st.dataframe(df)  # Same as st.write(df)
+
+                Mode = 'Append'
+                # st.radio("Select mode",('Overwrite','Append'))
+
+                if st.button('Upload'):
+                    session = Session.builder.configs(conn2).create()
+                    df = session.create_dataframe(df)
+                    try:
+                        if Mode == 'Overwrite':
+                            df.write.mode('Overwrite').save_as_table(upload_table)
+                        else:
+                            df.write.mode('append').save_as_table(upload_table)
+                    except ValueError:
+                        st.error('Upload failed')
+                    else:
+                        st.write('File uploaded')

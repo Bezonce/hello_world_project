@@ -8,6 +8,9 @@ on:
     branches:
       - Dockerisation
 
+env:
+  ACTIONS_RUNNER_DEBUG: true
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -26,6 +29,13 @@ jobs:
 
       - name: Set up Docker
         uses: docker/setup-buildx-action@v1
+
+      - name: 'gcr.io/cloud-builders/docker'
+        args:
+          - 'build'
+          - '-t'
+          - 'us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}'
+          - '.'
 
       - name: Build and push Docker image
         env:

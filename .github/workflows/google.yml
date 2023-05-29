@@ -19,6 +19,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Configure gcloud credentials
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: ${{ secrets.GOOGLE_AUTH_TOKEN }}
+
+      - name: Setup gcloud / gsutil
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GCS_PROJECT }}
+
+      - name: Display gcloud auth list
+        run: |
+          gcloud auth list --format="yaml"
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -34,7 +48,7 @@ jobs:
       - uses: 'gcr.io/cloud-builders/docker'
         with:
           args: 'build -t us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA} .'
-      
+
 
       - name: Build and push Docker image
         env:

@@ -30,8 +30,11 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v1
 
-      - name: Build with Docker
-        run: gcr.io/cloud-builders/docker -t us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA} .
+      # Docker Build
+      - uses: 'gcr.io/cloud-builders/docker'
+        with:
+          args: 'build -t us-central1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA} .'
+      
 
       - name: Build and push Docker image
         env:

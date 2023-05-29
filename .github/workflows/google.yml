@@ -10,6 +10,8 @@ on:
 
 env:
   ACTIONS_RUNNER_DEBUG: true
+  PROJECT_ID: hellowolrdproject-387922
+  _ARTIFACT_REGISTRY_REPO: hello-world-project-gcl-repo
 
 jobs:
   build-and-deploy:
@@ -40,10 +42,6 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
-
-      env:
-        PROJECT_ID: hellowolrdproject-387922
-        _ARTIFACT_REGISTRY_REPO: hello-world-project-gcl-repo
 
       steps:
         - name: Build and push container image

@@ -43,7 +43,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      steps:
-        - name: Build and push container image
-          run: |
-            gcloud builds submit --tag=gcr.io/${{ env.PROJECT_ID }}/${{ env._ARTIFACT_REGISTRY_REPO }}/myimage:${{ github.sha }} .
+      - name: Build and push container image
+        run: |
+          gcloud builds submit --tag=gcr.io/${{ env.PROJECT_ID }}/${{ env._ARTIFACT_REGISTRY_REPO }}/myimage:${{ github.sha }} .

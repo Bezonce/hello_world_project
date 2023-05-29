@@ -28,3 +28,8 @@ build/
 # Ignore system-specific files
 .DS_Store
 Thumbs.db
+
+# Ignore hello world json credentials
+*.json
+# Ignore deplyo.bat
+deploy.bat

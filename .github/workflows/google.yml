@@ -1,15 +1,16 @@
-name: Deploy to Google Cloud
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
+      - main
+  pull_request:
+    branches:
       - Dockerisation
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      PROJECT_ID: hellowolrdproject-387922
 
     steps:
       - name: Checkout code
@@ -18,16 +19,37 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.x
+          python-version: 3.8
 
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip | 
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Deploy to Google Cloud
+      - name: Run unit tests
+        run: pytest
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push Docker image
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          echo "${{ secrets.GOOGLE_AUTH_TOKEN }}" | base64 --decode > /tmp/account.json
-          gcloud auth activate-service-account --key-file=/tmp/account.json
-          gcloud config set project YOUR_PROJECT_ID
-          gcloud app deploy
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+          docker build -t myapp .
+          docker tag myapp:latest <your-docker-registry>/myapp:latest
+          docker push <your-docker-registry>/myapp:latest
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          project_id: <your-project-id>
+          service_account_key: ${{ secrets.GCLOUD_AUTH }}
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy myapp \
+            --image=<your-docker-registry>/myapp:latest \
+            --platform=managed \
+            --region=<your-region> \
+            --allow-unauthenticated

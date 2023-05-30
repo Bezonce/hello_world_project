@@ -1,0 +1,14 @@
+env:
+  ACTIONS_RUNNER_DEBUG: true
+  PROJECT_ID: hellowolrdproject-387922
+  _ARTIFACT_REGISTRY_REPO: hello-world-project-gcl-repo
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/myimage:${SHORT_SHA}'
+      - '-f'
+      - 'DockerFile'
+      - '.'

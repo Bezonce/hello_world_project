@@ -40,9 +40,6 @@ jobs:
         with:
           python-version: 3.8
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
       - name: Build and push container image
         run: |
           gcloud builds submit --tag=gcr.io/${{ env.PROJECT_ID }}/${{ env._ARTIFACT_REGISTRY_REPO }}/myimage:${{ github.sha }}

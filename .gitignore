@@ -33,3 +33,9 @@ Thumbs.db
 *.json
 # Ignore deplyo.bat
 deploy.bat
+
+# SQLite databases
+*.sqlite
+
+# Virtual environment
+venv

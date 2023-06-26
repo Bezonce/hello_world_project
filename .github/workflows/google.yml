@@ -26,8 +26,8 @@ jobs:
 
     env:
       # Replace $PROJECT_ID with your project ID
-      PROJECT_ID: "hello-world-flask-390916"
-      IMAGE_NAME: gcr.io/${{ env.PROJECT_ID }}/app
+      PROJECT_ID: hello-world-flask-390916
+      IMAGE_NAME: gcr.io/${{ PROJECT_ID }}/app
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -47,10 +47,10 @@ jobs:
         run: gcloud auth configure-docker --quiet
 
       - name: Build Docker image
-        run: docker build . -t ${{ env.PROJECT_ID }}
+        run: docker build . -t ${{ PROJECT_ID }}
 
       - name: Push Docker image
-        run: docker push ${{ env.PROJECT_ID }}
+        run: docker push ${{ PROJECT_ID }}
 
       - id: deploy
         name: Deploy Docker image

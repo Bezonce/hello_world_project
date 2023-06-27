@@ -27,7 +27,7 @@ jobs:
     env:
       # Replace $PROJECT_ID with your project ID
       PROJECT_ID: "hello-world-flask-390916"
-      IMAGE_NAME: "gcr.io/${{ PROJECT_ID }}/app"
+      IMAGE_NAME: "gcr.io/hello-world-flask-390916/app"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:

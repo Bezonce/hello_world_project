@@ -50,7 +50,7 @@ jobs:
         run: docker build . -t ${{ PROJECT_ID }}
 
       - name: Push Docker image
-        run: docker push ${{ PROJECT_ID }}
+        run: docker push ${{ env.PROJECT_ID }}
 
       - id: deploy
         name: Deploy Docker image

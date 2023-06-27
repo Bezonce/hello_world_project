@@ -47,10 +47,10 @@ jobs:
         run: gcloud auth configure-docker --quiet
 
       - name: Build Docker image
-        run: docker build . -t ${{ env.PROJECT_ID }}
+        run: docker build . -t ${{ env.IMAGE_NAME }}
 
       - name: Push Docker image
-        run: docker push ${{ env.PROJECT_ID }}
+        run: docker push ${{ env.IMAGE_NAME }}
 
       - id: deploy
         name: Deploy Docker image

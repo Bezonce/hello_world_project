@@ -23,7 +23,7 @@ env:
   SERVICE_ACC: github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com
 
 jobs:
-  job_id:
+  run-and-test:
     permissions:
       contents: 'read'
       id-token: 'write'

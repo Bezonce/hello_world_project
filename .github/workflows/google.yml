@@ -20,6 +20,7 @@ env:
   PROJECT_ID: hello-world-flask-390916
   LOCATION: europe-central2
   REPO_NAME: hello-world-flask-390916/hello-world-flask
+  SERVICE_ACC: github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com
 
 jobs:
   job_id:
@@ -35,7 +36,7 @@ jobs:
       uses: 'google-github-actions/auth@v1'
       with:
         workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
-        service_account: 'github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com'
+        service_account: '${{env.SERVICE_ACC}}'
 
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
@@ -44,3 +45,6 @@ jobs:
 
     - name: 'Use gcloud CLI'
       run: 'gcloud info'
+
+    - name: 'Use gcloud CLI'
+      run: 'gcloud iam service-accounts describe ${{env.SERVICE_ACC}}'

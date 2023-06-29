@@ -32,8 +32,8 @@ jobs:
       - name: Set up Google Cloud SDK
         uses: google-github-actions/auth@v1
         with:
-          project_id: ${{ env.PROJECT_ID }}
-          service_account_key: ${{ secrets.GCLOUD_AUTH }}
+          workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
+          service_account: 'github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com'
 
       - name: Authenticate with Workload Identity Provider
         id: auth

@@ -32,19 +32,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - id: 'auth'
-      uses: 'google-github-actions/auth@v1'
-      with:
-        workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
-        service_account: '${{env.SERVICE_ACC}}'
+    - uses: 'actions/checkout@v3'
 
+     # Configure Workload Identity Federation via a credentials file.
+     - id: 'auth'
+       name: 'Authenticate to Google Cloud'
+       uses: 'google-github-actions/auth@v1'
+       with:
+         workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
+         service_account: '${{env.SERVICE_ACC}}'
+
+          # Install gcloud, `setup-gcloud` automatically picks up authentication from `auth`.
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
-      with:
-        version: '>= 363.0.0'
 
-    - name: 'Use gcloud CLI'
-      run: 'gcloud info'
+    # Now you can run gcloud commands authenticated as the impersonated service account.
+    - id: 'gcloud'
+      name: 'gcloud'
+      run: |-
+        gcloud secrets versions access "latest" --secret "my-secret"
 
     - name: 'Use gcloud CLI'
       run: 'gcloud iam service-accounts describe ${{env.SERVICE_ACC}}'

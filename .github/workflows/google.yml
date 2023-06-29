@@ -43,9 +43,6 @@ jobs:
       - name: Authenticate with Workload Identity Provider
         id: auth
         run: |
-          gcloud container clusters get-credentials your-cluster-name \
-            --region ${{ env.LOCATION }} \
-            --project ${{ env.PROJECT_ID }}
           gcloud auth configure-docker --quiet
 
       - name: Build and Push Docker image

@@ -1,66 +1,67 @@
-# This is a basic workflow to help you get started with Actions
-name: CD
-
-# Controls when the workflow will run
+#      # Replace $PROJECT_ID with your project ID
+#      PROJECT_ID: "hello-world-flask-390916"
+#      IMAGE_NAME: "gcr.io/hello-world-flask-390916/app"
+#      AR_REGION:
+#      GAR_REPO_NAME:
+#
+#      - name: Authenticate to Google Cloud
+#        uses: google-github-actions/auth@v0
+#        with:
+#          # Replace with your Workload Identity Provider Location
+#          workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
+#          # Replace with your GitHub Service Account
+#          service_account: 'github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com'
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [Dockerisation]
-  pull_request:
-    branches: [main]
+    branches:
+      - Dockerisation
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+env:
+  PROJECT_ID: hello-world-flask-390916
+  LOCATION: europe-central2
+  REPO_NAME: hello-world-flask-390916/hello-world-flask
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "deploy"
-  deploy:
-    # The type of runner that the job will run on
+  build-and-push:
     runs-on: ubuntu-latest
 
-    # Add "id-token" with the intended permissions.
-    permissions:
-      contents: "read"
-      id-token: "write"
-
-    env:
-      # Replace $PROJECT_ID with your project ID
-      PROJECT_ID: "hello-world-flask-390916"
-      IMAGE_NAME: "gcr.io/hello-world-flask-390916/app"
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v0
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@master
         with:
-          # Replace with your Workload Identity Provider Location
-          workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
-          # Replace with your GitHub Service Account
-          service_account: 'github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com'
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCLOUD_AUTH }}
 
-      - name: Configure Docker
-        run: gcloud auth configure-docker --quiet
+      - name: Authenticate with Workload Identity Provider
+        id: auth
+        run: |
+          gcloud container clusters get-credentials your-cluster-name \
+            --region ${{ env.LOCATION }} \
+            --project ${{ env.PROJECT_ID }}
+          gcloud auth configure-docker --quiet
 
-      - name: Build Docker image
-        run: docker build . -t ${{ env.IMAGE_NAME }}
+      - name: Build and Push Docker image
+        run: |
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }} .
+          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }}
 
-      - name: Push Docker image
-        run: docker push ${{ env.IMAGE_NAME }}
+      - name: Create Artifact Registry repository
+        run: |
+          gcloud artifacts repositories create ${{ env.REPO_NAME }} \
+            --repository-format=docker \
+            --location=${{ env.LOCATION }} \
+            --project=${{ env.PROJECT_ID }}
 
-      - id: deploy
-        name: Deploy Docker image
-        uses: "google-github-actions/deploy-cloudrun@v0"
-        with:
-          image: ${{ env.IMAGE_NAME }}
-          region: europe-central2
-          service: app
-          flags: --port=5000
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.LOCATION }}-docker.pkg.dev \
+            --project=${{ env.PROJECT_ID }}
 
-      # Example of using the output
-      - name: Test URL
-        run: curl "${{ steps.deploy.outputs.url }}"
+      - name: Push Docker image to Artifact Registry
+        run: |
+          docker tag gcr.io/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }} \
+            ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }}
+          docker push ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }}

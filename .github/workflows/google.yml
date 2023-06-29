@@ -22,48 +22,23 @@ env:
   REPO_NAME: hello-world-flask-390916/hello-world-flask
 
 jobs:
-  build-and-push:
+  job_id:
     # Add "id-token" with the intended permissions.
     permissions:
       contents: 'read'
       id-token: 'write'
 
-    runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
+        service_account: 'github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com'
 
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: 'projects/65253733312/locations/global/workloadIdentityPools/gh-pool/providers/gh-provider'
-          service_account: 'github-actions-service-account@hello-world-flask-390916.iam.gserviceaccount.com'
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        version: '>= 363.0.0'
 
-      - name: Authenticate with Workload Identity Provider
-        id: auth
-        run: |
-          gcloud auth configure-docker --quiet
-
-      - name: Build and Push Docker image
-        run: |
-          docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }} .
-          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }}
-
-      - name: Create Artifact Registry repository
-        run: |
-          gcloud artifacts repositories create ${{ env.REPO_NAME }} \
-            --repository-format=docker \
-            --location=${{ env.LOCATION }} \
-            --project=${{ env.PROJECT_ID }}
-
-      - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker ${{ env.LOCATION }}-docker.pkg.dev \
-            --project=${{ env.PROJECT_ID }}
-
-      - name: Push Docker image to Artifact Registry
-        run: |
-          docker tag gcr.io/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }} \
-            ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }}
-          docker push ${{ env.LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}:${{ github.sha }}
+    - name: 'Use gcloud CLI'
+      run: 'gcloud info'
